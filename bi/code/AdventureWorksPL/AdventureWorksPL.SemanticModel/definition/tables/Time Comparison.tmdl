@@ -1,0 +1,44 @@
+/// Calculation group: put Comparison on a matrix's columns and every measure gets Actual, LY and variance.
+table 'Time Comparison'
+	lineageTag: 397b23b6-26f0-4cff-adc1-fac340bd49a0
+
+	calculationGroup
+		precedence: 10
+
+		calculationItem Actual = SELECTEDMEASURE ()
+
+		calculationItem LY =
+				CALCULATE (
+				    SELECTEDMEASURE (),
+				    REMOVEFILTERS ( 'Date' ),
+				    TREATAS ( VALUES ( 'Date'[LYFiscalWeekID] ), 'Date'[FiscalWeekID] )
+				)
+
+		calculationItem 'vs LY' =
+				SELECTEDMEASURE ()
+				    - CALCULATE ( SELECTEDMEASURE (), 'Time Comparison'[Comparison] = "LY" )
+
+		calculationItem 'vs LY %' =
+				DIVIDE (
+				    SELECTEDMEASURE ()
+				        - CALCULATE ( SELECTEDMEASURE (), 'Time Comparison'[Comparison] = "LY" ),
+				    CALCULATE ( SELECTEDMEASURE (), 'Time Comparison'[Comparison] = "LY" )
+				)
+
+			formatStringDefinition = "0.0%"
+
+	column Comparison
+		dataType: string
+		lineageTag: e359e8fb-9533-414f-b3ea-5ea8b9e89c7d
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: fc82808f-79b9-439d-9af8-2e2378f3500d
+		summarizeBy: sum
+		sourceColumn: Ordinal
+

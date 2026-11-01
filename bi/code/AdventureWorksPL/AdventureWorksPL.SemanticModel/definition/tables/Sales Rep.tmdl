@@ -1,0 +1,43 @@
+/// One row per salesperson, plus an Internet row (key -1) for orders without a rep.
+table 'Sales Rep'
+	lineageTag: 00253c5b-8973-40cd-95cc-d6ef52b0b4ff
+
+	column SalesRepKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 4ebad045-5b7b-4852-bf77-6ff97df15d7f
+		summarizeBy: none
+		sourceColumn: SalesRepKey
+
+	column 'Sales Rep'
+		dataType: string
+		lineageTag: 7d7f69cf-7edc-4b94-a9f2-e8f4a3980c70
+		summarizeBy: none
+		sourceColumn: Sales Rep
+
+	column Title
+		dataType: string
+		lineageTag: 1380239b-5cb6-4208-ad24-a4e16f993da1
+		summarizeBy: none
+		sourceColumn: Title
+
+	partition 'Sales Rep' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(ServerName, DatabaseName),
+				    Reps   = Value.NativeQuery(Source, "
+				SELECT EmployeeKey AS SalesRepKey,
+				       CONCAT(FirstName, ' ', LastName) AS [Sales Rep],
+				       Title
+				FROM dbo.DimEmployee
+				WHERE SalesPersonFlag = 1
+				UNION ALL
+				SELECT -1, 'Internet (no rep)', 'Internet'
+				")
+				in
+				    Reps
+
+	annotation PBI_ResultType = Table
+

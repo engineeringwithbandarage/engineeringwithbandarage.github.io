@@ -1,0 +1,136 @@
+/// Grain: one order line, internet or reseller. Amounts are in USD; LocalCurrencyRate converts them to the order's currency.
+table Sales
+	lineageTag: 092dd72a-8182-4672-9f3a-0a8ce7e14f2f
+
+	column DateKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 907602fe-a8ef-4540-aa40-e9e91ac34a90
+		summarizeBy: none
+		sourceColumn: DateKey
+
+	column ChannelKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 19c94511-1ace-4e76-a822-3361a4a30a74
+		summarizeBy: none
+		sourceColumn: ChannelKey
+
+	column CustomerID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 2fcbb830-2d40-4697-852f-5f97095c527e
+		summarizeBy: none
+		sourceColumn: CustomerID
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f93943b6-9298-48ef-994c-6592e245d3c9
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	column SalesTerritoryKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: b74813dc-13d6-481f-beb5-1d013b875bf1
+		summarizeBy: none
+		sourceColumn: SalesTerritoryKey
+
+	column SalesRepKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: aa164b97-e813-473b-b47b-4b02e524bdfa
+		summarizeBy: none
+		sourceColumn: SalesRepKey
+
+	column CurrencyKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 1df402d4-7e14-4aa6-bf16-5d3843086fe5
+		summarizeBy: none
+		sourceColumn: CurrencyKey
+
+	column Units
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: c118f19e-0e31-485a-94f0-66f19124f594
+		summarizeBy: sum
+		sourceColumn: Units
+
+	column GrossSales
+		dataType: decimal
+		isHidden
+		formatString: #,0.00
+		lineageTag: 5b8a9ee2-7bfb-4fc0-ac28-9238c9a8272c
+		summarizeBy: sum
+		sourceColumn: GrossSales
+
+	column Discounts
+		dataType: decimal
+		isHidden
+		formatString: #,0.00
+		lineageTag: ed729716-437b-497e-aa3d-912c07927adb
+		summarizeBy: sum
+		sourceColumn: Discounts
+
+	column ProductCost
+		dataType: decimal
+		isHidden
+		formatString: #,0.00
+		lineageTag: 14a352db-f651-48da-a858-3830ae460d9b
+		summarizeBy: sum
+		sourceColumn: ProductCost
+
+	column LocalCurrencyRate
+		dataType: double
+		isHidden
+		formatString: 0.000000
+		lineageTag: 4973c8c9-57c5-441f-8197-7d23940c5095
+		summarizeBy: none
+		sourceColumn: LocalCurrencyRate
+
+	partition 'Sales FY2011' = m
+		mode: import
+		source =
+				let
+				    Source = SalesSource,
+				    FY2011 = Table.SelectRows(Source, each [DateKey] >= 20100627 and [DateKey] < 20110626)
+				in
+				    FY2011
+
+	partition 'Sales FY2012' = m
+		mode: import
+		source =
+				let
+				    Source = SalesSource,
+				    FY2012 = Table.SelectRows(Source, each [DateKey] >= 20110626 and [DateKey] < 20120701)
+				in
+				    FY2012
+
+	partition 'Sales FY2013' = m
+		mode: import
+		source =
+				let
+				    Source = SalesSource,
+				    FY2013 = Table.SelectRows(Source, each [DateKey] >= 20120701 and [DateKey] < 20130630)
+				in
+				    FY2013
+
+	partition 'Sales FY2014' = m
+		mode: import
+		source =
+				let
+				    Source = SalesSource,
+				    FY2014 = Table.SelectRows(Source, each [DateKey] >= 20130630 and [DateKey] < 20140629)
+				in
+				    FY2014
+

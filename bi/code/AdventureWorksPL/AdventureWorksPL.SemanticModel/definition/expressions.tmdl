@@ -1,0 +1,92 @@
+/// SQL Server that hosts AdventureWorksDW2022. Change it here (or with a deployment rule) to point the model at another server.
+expression ServerName = "192.168.10.150" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+	lineageTag: c389ba12-60e4-4a95-bec2-a7040f291aa9
+
+	annotation PBI_ResultType = Text
+
+/// Warehouse database the model reads.
+expression DatabaseName = "AdventureWorksDW2022" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+	lineageTag: 1fe2cc1c-618e-483a-9da5-6e6e8fa1b455
+
+	annotation PBI_ResultType = Text
+
+/// The 4-4-5 fiscal calendar as a SQL common table expression named cal. The Date query starts from it, so the calendar rules exist once.
+expression FiscalCalendarSql =
+		"
+		WITH days AS (
+		    SELECT DateKey,
+		           FullDateAlternateKey AS [Date],
+		           EnglishDayNameOfWeek AS DayName,
+		           CalendarYear
+		    FROM dbo.DimDate
+		    WHERE FullDateAlternateKey BETWEEN '2010-06-27' AND '2014-06-28'
+		),
+		-- A fiscal year ends on the last Saturday of June and is named after that year.
+		-- DATEDIFF(day, '19000106', d) % 7 = days since the last Saturday (6 Jan 1900 was a Saturday).
+		years AS (
+		    SELECT days.*,
+		           CASE WHEN days.[Date] > e.YearEnd THEN days.CalendarYear + 1 ELSE days.CalendarYear END AS FiscalYear
+		    FROM days
+		    CROSS APPLY (SELECT DATEADD(day, -(DATEDIFF(day, '19000106', DATEFROMPARTS(days.CalendarYear, 6, 30)) % 7),
+		                                DATEFROMPARTS(days.CalendarYear, 6, 30)) AS YearEnd) AS e
+		),
+		weeks AS (
+		    SELECT years.*,
+		           DATEDIFF(day, s.YearStart, years.[Date]) / 7 + 1 AS FiscalWeek
+		    FROM years
+		    CROSS APPLY (SELECT DATEADD(day, 1 - (DATEDIFF(day, '19000106', DATEFROMPARTS(years.FiscalYear - 1, 6, 30)) % 7),
+		                                DATEFROMPARTS(years.FiscalYear - 1, 6, 30)) AS YearStart) AS s
+		),
+		-- 4-4-5: each quarter is 13 weeks split 4, 4 and 5; week 53 belongs to period 12.
+		cal AS (
+		    SELECT weeks.*,
+		           q.FiscalQuarter,
+		           (q.FiscalQuarter - 1) * 3
+		               + CASE WHEN q.WeekOfQuarter <= 4 THEN 1 WHEN q.WeekOfQuarter <= 8 THEN 2 ELSE 3 END AS FiscalPeriod
+		    FROM weeks
+		    CROSS APPLY (SELECT CASE WHEN weeks.FiscalWeek = 53 THEN 4  ELSE (weeks.FiscalWeek - 1) / 13 + 1 END AS FiscalQuarter,
+		                        CASE WHEN weeks.FiscalWeek = 53 THEN 13 ELSE (weeks.FiscalWeek - 1) % 13 + 1 END AS WeekOfQuarter) AS q
+		)
+		"
+	lineageTag: c72ece4d-5848-4b05-a1da-db752975729a
+
+	annotation PBI_ResultType = Text
+
+/// Internet and reseller order lines in one fact, at order-line grain. Every Sales partition filters this query, and the filter folds into SQL Server.
+expression SalesSource =
+		let
+		    Source = Sql.Database(ServerName, DatabaseName),
+		    Sales  = Value.NativeQuery(Source, "
+		SELECT  s.OrderDateKey AS DateKey,
+		        s.ChannelKey,
+		        s.CustomerID,
+		        s.ProductKey,
+		        s.SalesTerritoryKey,
+		        s.SalesRepKey,
+		        s.CurrencyKey,
+		        s.OrderQuantity AS Units,
+		        CAST(s.ExtendedAmount   AS decimal(19, 4)) AS GrossSales,
+		        CAST(s.DiscountAmount   AS decimal(19, 4)) AS Discounts,       /* float in the warehouse */
+		        CAST(s.TotalProductCost AS decimal(19, 4)) AS ProductCost,
+		        CAST(1.0 / r.AverageRate AS decimal(19, 6)) AS LocalCurrencyRate /* local units per USD on the order date */
+		FROM (
+		        SELECT 1 AS ChannelKey, CustomerKey AS CustomerID, -1 AS SalesRepKey,
+		               OrderDateKey, ProductKey, SalesTerritoryKey, CurrencyKey,
+		               OrderQuantity, ExtendedAmount, DiscountAmount, TotalProductCost
+		        FROM dbo.FactInternetSales
+		        UNION ALL
+		        SELECT 2, 100000 + ResellerKey, EmployeeKey,
+		               OrderDateKey, ProductKey, SalesTerritoryKey, CurrencyKey,
+		               OrderQuantity, ExtendedAmount, DiscountAmount, TotalProductCost
+		        FROM dbo.FactResellerSales
+		     ) AS s
+		LEFT JOIN dbo.FactCurrencyRate AS r
+		       ON r.CurrencyKey = s.CurrencyKey
+		      AND r.DateKey = s.OrderDateKey
+		", null, [EnableFolding = true])
+		in
+		    Sales
+	lineageTag: 71d12b1b-d3b9-4d01-b12e-0459d2539b9d
+
+	annotation PBI_ResultType = Table
+

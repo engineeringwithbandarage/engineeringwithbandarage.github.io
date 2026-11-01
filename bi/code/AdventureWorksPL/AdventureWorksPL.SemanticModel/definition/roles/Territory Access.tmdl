@@ -1,0 +1,15 @@
+/// A user sees the sales territories mapped to their e-mail in User Access. No row, no data.
+role 'Territory Access'
+	modelPermission: read
+
+	tablePermission 'Sales Territory' =
+			'Sales Territory'[SalesTerritoryKey]
+			    IN CALCULATETABLE (
+			        VALUES ( 'User Access'[SalesTerritoryKey] ),
+			        'User Access'[UserEmail] = USERPRINCIPALNAME ()
+			    )
+
+	tablePermission 'User Access' = 'User Access'[UserEmail] = USERPRINCIPALNAME ()
+
+	annotation PBI_Id = 75bcff65acec4ab9a37fea4181f152dd
+

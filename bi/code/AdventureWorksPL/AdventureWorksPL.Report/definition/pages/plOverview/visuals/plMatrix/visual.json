@@ -1,0 +1,150 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "plMatrix",
+  "position": {
+    "x": 20,
+    "y": 196,
+    "z": 10000,
+    "height": 510,
+    "width": 610,
+    "tabOrder": 10000
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Columns": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Time Comparison"
+                    }
+                  },
+                  "Property": "Comparison"
+                }
+              },
+              "queryRef": "Time Comparison.Comparison",
+              "nativeQueryRef": "Comparison",
+              "active": true
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "01 - Gross Sales"
+                }
+              },
+              "queryRef": "_Measures.01 - Gross Sales",
+              "nativeQueryRef": "01 - Gross Sales"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "02 - Discounts"
+                }
+              },
+              "queryRef": "_Measures.02 - Discounts",
+              "nativeQueryRef": "02 - Discounts"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "03 - Net Sales"
+                }
+              },
+              "queryRef": "_Measures.03 - Net Sales",
+              "nativeQueryRef": "03 - Net Sales"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "04 - Product Cost"
+                }
+              },
+              "queryRef": "_Measures.04 - Product Cost",
+              "nativeQueryRef": "04 - Product Cost"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "05 - Gross Profit"
+                }
+              },
+              "queryRef": "_Measures.05 - Gross Profit",
+              "nativeQueryRef": "05 - Gross Profit"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "values": [
+        {
+          "properties": {
+            "valuesOnRow": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'P&L: actual vs last year'"
+                }
+              }
+            },
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

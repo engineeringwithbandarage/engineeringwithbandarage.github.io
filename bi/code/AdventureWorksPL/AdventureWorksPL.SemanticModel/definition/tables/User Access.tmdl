@@ -1,0 +1,43 @@
+/// E-mail -> sales territory, read by the Territory Access role. Reps see their territory; sales managers see their whole group.
+table 'User Access'
+	isHidden
+	lineageTag: 049ab5c4-8bd1-4edf-b648-a3aa75489b31
+
+	column UserEmail
+		dataType: string
+		isHidden
+		lineageTag: 6d217a67-1613-4ee3-bb0b-fcecad06e170
+		summarizeBy: none
+		sourceColumn: UserEmail
+
+	column SalesTerritoryKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 063e607c-f620-45d2-8e9a-d13099679586
+		summarizeBy: none
+		sourceColumn: SalesTerritoryKey
+
+	partition 'User Access' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(ServerName, DatabaseName),
+				    Access = Value.NativeQuery(Source, "
+				SELECT e.EmailAddress AS UserEmail,
+				       t.SalesTerritoryKey
+				FROM dbo.DimEmployee AS e
+				JOIN dbo.DimSalesTerritory AS t
+				  ON t.SalesTerritoryKey = e.SalesTerritoryKey
+				  OR t.SalesTerritoryGroup = CASE e.Title
+				                                 WHEN 'North American Sales Manager' THEN 'North America'
+				                                 WHEN 'European Sales Manager'      THEN 'Europe'
+				                                 WHEN 'Pacific Sales Manager'       THEN 'Pacific'
+				                             END
+				WHERE e.SalesPersonFlag = 1
+				")
+				in
+				    Access
+
+	annotation PBI_ResultType = Table
+

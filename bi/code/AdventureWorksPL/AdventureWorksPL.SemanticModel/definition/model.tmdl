@@ -1,0 +1,30 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["ServerName","DatabaseName","FiscalCalendarSql","SalesSource","Date","Customer","Product","Sales Territory","Sales Rep","Channel","Currency","User Access"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table _Measures
+ref table Sales
+ref table Date
+ref table Customer
+ref table Product
+ref table 'Sales Territory'
+ref table 'Sales Rep'
+ref table Channel
+ref table Currency
+ref table 'User Access'
+ref table 'Period To Date'
+ref table 'Time Comparison'
+
+ref role 'Territory Access'
+

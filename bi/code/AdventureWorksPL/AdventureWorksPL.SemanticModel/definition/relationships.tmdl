@@ -1,0 +1,27 @@
+relationship Sales_Date
+	fromColumn: Sales.DateKey
+	toColumn: Date.DateKey
+
+relationship Sales_Customer
+	fromColumn: Sales.CustomerID
+	toColumn: Customer.CustomerID
+
+relationship Sales_Product
+	fromColumn: Sales.ProductKey
+	toColumn: Product.ProductKey
+
+relationship Sales_SalesTerritory
+	fromColumn: Sales.SalesTerritoryKey
+	toColumn: 'Sales Territory'.SalesTerritoryKey
+
+relationship Sales_SalesRep
+	fromColumn: Sales.SalesRepKey
+	toColumn: 'Sales Rep'.SalesRepKey
+
+relationship Sales_Currency
+	fromColumn: Sales.CurrencyKey
+	toColumn: Currency.CurrencyKey
+
+relationship Sales_Channel
+	fromColumn: Sales.ChannelKey
+	toColumn: Channel.ChannelKey

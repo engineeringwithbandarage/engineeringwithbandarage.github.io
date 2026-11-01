@@ -1,0 +1,29 @@
+/// Choices for the period-to-date selector. No relationships: 03 - Net Sales PTD reads the selection.
+table 'Period To Date'
+	lineageTag: 41236e88-9254-46f7-8396-8a549e310729
+
+	column Period
+		dataType: string
+		lineageTag: d9af2951-0b83-4918-aa16-b32ba508500e
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Period]
+		sortByColumn: Sort
+
+	column Sort
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 8cf7243f-7306-408e-9a80-5c8f5c176acf
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Sort]
+
+	partition 'Period To Date' = calculated
+		mode: import
+		source =
+				DATATABLE (
+				    "Period", STRING, "Sort", INTEGER,
+				    { { "Week", 1 }, { "Period", 2 }, { "Quarter", 3 }, { "Year", 4 } }
+				)
+

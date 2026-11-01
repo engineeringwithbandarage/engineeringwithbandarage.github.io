@@ -1,0 +1,85 @@
+/// One row per product version. DimProduct keeps price history, so one product code can have several keys.
+table Product
+	lineageTag: b1687dec-737a-4f7d-b803-8c352343b156
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: bc23816c-923a-41cb-b551-4dcd98ca4811
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	column 'Product Code'
+		dataType: string
+		lineageTag: 73c887d8-1373-42dc-b34c-33b4ec5bc887
+		summarizeBy: none
+		sourceColumn: Product Code
+
+	column Product
+		dataType: string
+		lineageTag: cab29cc9-45c0-49ab-8391-e45b92b2c888
+		summarizeBy: none
+		sourceColumn: Product
+
+	column Model
+		dataType: string
+		lineageTag: 13567530-0f8e-4427-95e7-2ce30f140e52
+		summarizeBy: none
+		sourceColumn: Model
+
+	column Color
+		dataType: string
+		lineageTag: eaa76132-79fc-418e-9080-3997191e64a5
+		summarizeBy: none
+		sourceColumn: Color
+
+	column Subcategory
+		dataType: string
+		lineageTag: 40a26bad-40b7-4aae-839e-137614803b81
+		summarizeBy: none
+		sourceColumn: Subcategory
+
+	column Category
+		dataType: string
+		lineageTag: 5678c7f3-5cac-4e36-bf19-321e007c5b07
+		summarizeBy: none
+		sourceColumn: Category
+
+	hierarchy 'Product Hierarchy'
+		lineageTag: dcb32b4d-29f8-406c-8d4e-f42ef9c10636
+
+		level Category
+			lineageTag: b543c812-cba3-40f8-b017-58a089431ca9
+			column: Category
+
+		level Subcategory
+			lineageTag: 1962faf2-1fb2-4bf7-8d4f-e5e485776a11
+			column: Subcategory
+
+		level Product
+			lineageTag: 42b3472a-5a26-44fc-bf80-fcfbcff74f39
+			column: Product
+
+	partition Product = m
+		mode: import
+		source =
+				let
+				    Source   = Sql.Database(ServerName, DatabaseName),
+				    Products = Value.NativeQuery(Source, "
+				SELECT p.ProductKey,
+				       p.ProductAlternateKey AS [Product Code],
+				       p.EnglishProductName AS Product,
+				       COALESCE(p.ModelName, p.EnglishProductName) AS Model,
+				       COALESCE(p.Color, 'NA') AS Color,
+				       COALESCE(s.EnglishProductSubcategoryName, 'Unknown') AS Subcategory,
+				       COALESCE(c.EnglishProductCategoryName, 'Unknown') AS Category
+				FROM dbo.DimProduct AS p
+				LEFT JOIN dbo.DimProductSubcategory AS s ON s.ProductSubcategoryKey = p.ProductSubcategoryKey
+				LEFT JOIN dbo.DimProductCategory AS c ON c.ProductCategoryKey = s.ProductCategoryKey
+				")
+				in
+				    Products
+
+	annotation PBI_ResultType = Table
+

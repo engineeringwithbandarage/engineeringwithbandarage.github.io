@@ -1,0 +1,94 @@
+/// One row per customer: internet individuals and resellers in one dimension. Reseller IDs are offset by 100000 so both fit one key.
+table Customer
+	lineageTag: ca27be61-0d2f-4b6f-8a33-d0047b00d870
+
+	column CustomerID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f41b3926-d633-4fbe-a7f4-0931841af371
+		summarizeBy: none
+		sourceColumn: CustomerID
+
+	column 'Customer Code'
+		dataType: string
+		lineageTag: 8b174107-72cf-4b28-8a96-640cc05fed9b
+		summarizeBy: none
+		sourceColumn: Customer Code
+
+	/// Customer name. Names that are not unique get their code appended, so two customers never merge in a visual.
+	column Customer
+		dataType: string
+		lineageTag: 88afe129-659a-4e9c-8cd3-66ce410597d0
+		summarizeBy: none
+		sourceColumn: Customer
+
+	/// Individual, or the reseller's business type.
+	column 'Customer Type'
+		dataType: string
+		lineageTag: 88006482-a69f-47c6-bb38-0a6f3bf20215
+		summarizeBy: none
+		sourceColumn: Customer Type
+
+	column City
+		dataType: string
+		lineageTag: 4bdabce2-8530-4715-a55f-fa003b9f037d
+		summarizeBy: none
+		sourceColumn: City
+
+	column State
+		dataType: string
+		lineageTag: 149fc555-a570-415c-974b-d8a5fc79153d
+		summarizeBy: none
+		sourceColumn: State
+
+	column Country
+		dataType: string
+		lineageTag: f1670985-9e6b-4953-8076-8c73015f339e
+		summarizeBy: none
+		sourceColumn: Country
+
+	hierarchy 'Customer Type Hierarchy'
+		lineageTag: 9555876a-bd01-43b0-9401-bbdd486d0bfd
+
+		level 'Customer Type'
+			lineageTag: 6d48f24a-a35b-42d3-a292-fd4ab8b2ec1e
+			column: 'Customer Type'
+
+		level Customer
+			lineageTag: a68868eb-61ab-413d-9e20-0fba6f588d13
+			column: Customer
+
+	partition Customer = m
+		mode: import
+		source =
+				let
+				    Source    = Sql.Database(ServerName, DatabaseName),
+				    Customers = Value.NativeQuery(Source, "
+				SELECT CustomerID,
+				       CustomerCode AS [Customer Code],
+				       CASE WHEN COUNT(*) OVER (PARTITION BY Name) > 1
+				            THEN CONCAT(Name, ' (', CustomerCode, ')') ELSE Name END AS Customer,
+				       CustomerType AS [Customer Type],
+				       City,
+				       [State],
+				       Country
+				FROM (
+				    SELECT c.CustomerKey AS CustomerID, c.CustomerAlternateKey AS CustomerCode,
+				           CONCAT(c.FirstName, ' ', c.LastName) AS Name, CAST('Individual' AS nvarchar(50)) AS CustomerType,
+				           g.City, g.StateProvinceName AS [State], g.EnglishCountryRegionName AS Country
+				    FROM dbo.DimCustomer AS c
+				    JOIN dbo.DimGeography AS g ON g.GeographyKey = c.GeographyKey
+				    UNION ALL
+				    SELECT 100000 + r.ResellerKey, r.ResellerAlternateKey,
+				           r.ResellerName, r.BusinessType,
+				           g.City, g.StateProvinceName, g.EnglishCountryRegionName
+				    FROM dbo.DimReseller AS r
+				    JOIN dbo.DimGeography AS g ON g.GeographyKey = r.GeographyKey
+				) AS c
+				")
+				in
+				    Customers
+
+	annotation PBI_ResultType = Table
+

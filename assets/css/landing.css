@@ -1,0 +1,203 @@
+/* Landing page layout — profile, platform map, tracks, expertise, lab, start paths.
+   Uses the colour tokens from site.css, so light/dark mode follows the rest of the site. */
+
+.lp { max-width: 1160px; margin: 0 auto; padding: 0 20px; overflow-x: clip; }
+/* thin frame around the whole page column, from the top bar down to a closing line under the footer
+   (wide screens only); it sits 40px outside the content */
+body { position: relative; padding-bottom: 28px; }
+body::before {
+  content: ""; position: absolute; top: 0; bottom: 20px; left: 50%; z-index: 60; pointer-events: none;
+  width: 1200px; transform: translateX(-50%);
+  border: 1px solid var(--frame);
+}
+:root { --frame: color-mix(in srgb, var(--accent) 40%, transparent); }
+.site-footer { max-width: 1200px; margin: 0 auto; }      /* footer divider stays inside the frame */
+/* top bar divider only inside the frame, not out to the window edges */
+.topbar { border-bottom-color: transparent; }
+.topbar::after { content: ""; position: absolute; left: 50%; bottom: -1px; width: 1200px; transform: translateX(-50%); border-bottom: 1px solid var(--border); pointer-events: none; }
+@media (max-width: 1240px) {
+  body::before, .topbar::after { display: none; }
+  body { padding-bottom: 0; }
+  .topbar { border-bottom-color: var(--border); }
+}
+.lp section { padding: 56px 0; border-top: 1px solid var(--border); }
+.lp section:first-child { border-top: 0; }
+.lp h2 { font-size: clamp(24px, 3.2vw, 32px); letter-spacing: -.02em; line-height: 1.2; margin: 0 0 8px; }
+.lp .lede { color: var(--text-muted); margin: 0 0 28px; max-width: 68ch; }
+.lp .kicker { font: 600 12px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-text); margin: 0 0 14px; }
+
+/* ---------- profile ---------- */
+/* Intro text and photo side by side, both about the same height, on a soft dotted backdrop */
+.profile { position: relative; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 56px; align-items: center; padding: clamp(48px, 7vw, 88px) 0 56px !important; isolation: isolate; }
+.profile::before {
+  content: ""; position: absolute; inset: 0 -40px; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(520px 380px at 82% 45%, var(--accent-soft), transparent 70%),
+    radial-gradient(circle, color-mix(in srgb, var(--border-strong) 70%, transparent) 1px, transparent 1.4px) 0 0 / 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 560px 420px at 80% 48%, #000 30%, transparent 75%);
+          mask-image: radial-gradient(ellipse 560px 420px at 80% 48%, #000 30%, transparent 75%);
+}
+.profile h1 { font-size: clamp(38px, 6vw, 64px); line-height: 1.04; letter-spacing: -.035em; font-weight: 800; margin: 0 0 20px; }
+.profile h1 span { color: var(--accent); }
+.profile .intro { font-size: clamp(17px, 1.9vw, 19px); color: var(--text-muted); margin: 0 0 22px; max-width: 56ch; }
+.profile .focus { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 30px; padding: 0; list-style: none; }
+.profile .focus li { font-size: 13.5px; font-weight: 600; }
+.profile .focus a { display: block; padding: 6px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); text-decoration: none; transition: background-color .15s, color .15s; }
+.profile .focus a:hover, .profile .focus a:focus-visible { background: var(--accent); color: #fff; }
+
+/* photo column pinned to the right edge: photo + its 16px offset frame and the contact row share one width */
+.photo-col { display: flex; flex-direction: column; align-items: stretch; justify-self: end; width: min(300px, 100%); }
+/* contact card: one LinkedIn link (icon, label, arrow) in a box */
+.contact-row { position: relative; margin-top: 34px; display: flex; align-items: center; gap: 2px; width: 100%; padding: 6px 4px 6px 8px; border-radius: 14px; background: var(--bg-elev); border: 1px solid var(--border); box-shadow: var(--shadow); transition: border-color .15s; }
+.contact-row:hover, .contact-row:focus-within { border-color: var(--accent); }
+.contact { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 2px 0; border-radius: 10px; color: var(--text); text-decoration: none; line-height: 1.3; }
+.contact .mail-ic { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--accent-soft); }
+.contact svg { width: 17px; height: 17px; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.contact b { display: block; font: 600 10px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
+.contact em { display: block; font-style: normal; font-size: 12.5px; font-weight: 600; transition: color .15s; }
+.contact:hover em, .contact:focus-visible em { color: var(--accent-text); }
+.contact .go-ic { flex: none; display: grid; place-items: center; width: 30px; height: 30px; margin-right: 4px; border-radius: 9px; transition: background .15s; }
+.contact:hover .go-ic, .contact:focus-visible .go-ic { background: var(--accent-soft); }
+.contact > span { flex: 1; min-width: 0; text-align: center; }
+/* on hover the icon becomes the LinkedIn logo: white "in" on LinkedIn blue */
+.contact .mail-ic, .contact .mail-ic svg { transition: background .15s, fill .15s, stroke .15s; }
+.contact:hover .mail-ic, .contact:focus-visible .mail-ic { background: #0a66c2; }
+.contact:hover .mail-ic svg, .contact:focus-visible .mail-ic svg { fill: #fff; stroke: none; }
+.photo-wrap { position: relative; width: calc(100% - 16px); }
+/* offset accent frame behind the photo */
+.photo-wrap::before { content: ""; position: absolute; inset: 0; transform: translate(16px, 16px); border: 2px solid var(--accent); border-radius: 20px; z-index: -1; }
+.portrait { margin: 0; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); background: var(--bg-sunk); box-shadow: 0 2px 4px rgba(20,20,30,.06), 0 18px 40px rgba(20,20,30,.14); }
+.portrait img { display: block; width: 100%; height: auto; }
+/* discourage casual saving: no drag, no long-press menu, and a transparent shield over the photo so right-click never targets the image */
+.protected { position: relative; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+.protected img { pointer-events: none; -webkit-user-drag: none; user-drag: none; }
+.protected::after { content: ""; position: absolute; inset: 0; background: transparent; }
+/* "Now writing" badge overlapping the photo's bottom-left corner */
+.now { position: absolute; left: -28px; bottom: 28px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: var(--bg-elev); border: 1px solid var(--border); box-shadow: var(--shadow); color: var(--text); text-decoration: none; font-size: 13.5px; font-weight: 600; line-height: 1.3; }
+.now:hover { border-color: var(--accent); }
+.now b { display: block; font: 600 10.5px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
+.now i { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); animation: pulse 2.4s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 7px transparent; } }
+@media (prefers-reduced-motion: reduce) { .now i { animation: none; } }
+
+/* ---------- at a glance band ---------- */
+.lp .glance-band { padding: 0 0 56px; border-top: 0; }
+/* 1px gaps over a border-coloured background draw the cell lines at any column count */
+.toolbox { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.toolbox li { margin: 0; background: var(--bg-sunk); font-size: 13.5px; line-height: 1.5; }
+.toolbox a { display: block; height: 100%; padding: 16px 16px 18px; color: var(--text); text-decoration: none; transition: background-color .15s; }
+.toolbox a:hover, .toolbox a:focus-visible { background: var(--accent-soft); }
+.toolbox a:hover b, .toolbox a:focus-visible b { color: var(--accent-text); }
+.toolbox b { display: block; font: 600 10.5px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px; }
+
+/* ---------- platform map ---------- */
+.flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; position: relative; }
+.stage { position: relative; display: flex; flex-direction: column; padding: 16px 16px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-elev); color: var(--text); text-decoration: none; transition: border-color .15s, transform .15s; }
+a.stage:hover { border-color: var(--accent); transform: translateY(-2px); }
+.stage:not(:last-child)::after { content: "→"; position: absolute; right: -14px; top: 50%; width: 14px; text-align: center; transform: translateY(-50%); color: var(--accent); font-weight: 700; }
+.stage .n { font: 600 11px/1 var(--font-mono); color: var(--text-faint); letter-spacing: .08em; margin-bottom: 10px; }
+.stage strong { font-size: 16px; line-height: 1.3; margin-bottom: 6px; }
+.stage small { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.stage .goes { margin-top: auto; padding-top: 12px; font-size: 12px; font-weight: 600; color: var(--accent-text); }
+.stage.plain { background: var(--bg-sunk); }
+/* the last stage has two consumers, each its own link */
+.stage.use strong { margin-bottom: 2px; }
+.stage .sub { display: flex; flex-direction: column; padding: 8px 0 2px; border-top: 1px solid var(--border); margin-top: 8px; color: var(--text); text-decoration: none; }
+.stage .sub b { font-size: 13.5px; }
+.stage .sub .goes { margin-top: 2px; padding-top: 4px; }
+.stage .sub:hover b { color: var(--accent-text); }
+.lp .aside-note { margin: 14px 0 0; font-size: 13.5px; color: var(--text-faint); }
+.band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; margin-top: 12px; padding: 12px 16px; border: 1px dashed var(--border-strong); border-radius: 12px; color: var(--text); text-decoration: none; font-size: 14px; }
+a.band:hover { border-color: var(--accent); border-style: solid; }
+.band b { font-weight: 650; }
+.band span { color: var(--text-muted); }
+.band em { font-style: normal; font-weight: 600; color: var(--accent-text); font-size: 13px; }
+
+/* ---------- tracks ---------- */
+/* 6-column grid, 3 tiles a row; a short last row stretches to fill the width (1 tile = full, 2 tiles = halves) */
+.tracks { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 18px; }
+.tracks .tile { grid-column: span 2; }
+.tracks .tile:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
+.tracks .tile:nth-last-child(2):nth-child(3n+1),
+.tracks .tile:last-child:nth-child(3n+2) { grid-column: span 3; }
+@media (max-width: 1080px) {
+  .tracks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tracks .tile,
+  .tracks .tile:last-child:nth-child(3n+1),
+  .tracks .tile:nth-last-child(2):nth-child(3n+1),
+  .tracks .tile:last-child:nth-child(3n+2) { grid-column: auto; }
+  .tracks .tile:last-child:nth-child(2n+1) { grid-column: 1 / -1; }
+}
+.tile { display: flex; flex-direction: column; padding: 24px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg-elev); }
+.tile-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.tile-num { font: 700 13px/1 var(--font-mono); color: var(--accent-text); background: var(--accent-soft); border-radius: 8px; padding: 7px 9px; }
+.tile-meta { font: 600 11px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); }
+.tile h3 { font-size: 22px; letter-spacing: -.015em; line-height: 1.25; margin: 0 0 8px; }
+.tile h3 a { color: var(--text); text-decoration: none; }
+.tile h3 a:hover { color: var(--accent-text); }
+.tile > p { color: var(--text-muted); font-size: 15px; line-height: 1.6; margin: 0 0 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 18px; padding: 0; list-style: none; }
+.chips li { font: 500 12px/1 var(--font-mono); padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); }
+.tuts { list-style: none; padding: 0; margin: auto 0 0; border-top: 1px solid var(--border); }
+.tuts li { border-bottom: 1px solid var(--border); }
+.tuts a { display: block; padding: 12px 0; text-decoration: none; color: var(--text); }
+.tuts a:hover .tt { color: var(--accent-text); }
+.tuts .tt { display: block; font-weight: 600; font-size: 15px; line-height: 1.4; }
+.tuts .pg { display: block; font-size: 12.5px; color: var(--text-faint); margin-top: 6px; }
+.tuts .pg .progress { height: 4px; margin: 0 0 6px; }
+
+/* ---------- expertise ---------- */
+.skills { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--bg-elev); }
+.skill { padding: 22px 24px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 0 -1px -1px 0; }
+.skill h3 { font-size: 17px; margin: 0 0 10px; letter-spacing: -.01em; }
+.skill ul { margin: 0 0 14px; padding-left: 18px; color: var(--text-muted); font-size: 14.5px; line-height: 1.65; }
+.skill .proof { font-size: 13px; color: var(--text-faint); }
+.skill .proof a { font-weight: 600; }
+.skill.wide { grid-column: 1 / -1; }
+.skill.wide ul { columns: 2; column-gap: 40px; }
+.tile.new { border-style: dashed; border-color: var(--accent); }
+@media (max-width: 760px) { .skill.wide ul { columns: 1; } }
+
+/* ---------- lab ---------- */
+.lab { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.lab a { display: block; padding: 18px; border-radius: 12px; background: var(--bg-sunk); border: 1px solid var(--border); color: var(--text); text-decoration: none; transition: border-color .15s, transform .15s; }
+.lab a:hover, .lab a:focus-visible { border-color: var(--accent); transform: translateY(-2px); }
+.lab b { display: block; font-size: 15px; margin-bottom: 4px; }
+.lab span { font-size: 13.5px; color: var(--text-muted); line-height: 1.5; display: block; }
+
+/* ---------- start paths ---------- */
+.paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.path { display: flex; flex-direction: column; padding: 22px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-elev); color: var(--text); text-decoration: none; transition: border-color .15s, transform .15s; }
+.path:hover { border-color: var(--accent); transform: translateY(-2px); }
+.path .who { font: 600 11px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 10px; }
+.path strong { font-size: 17px; line-height: 1.35; margin-bottom: 6px; }
+.path span { font-size: 14px; color: var(--text-muted); line-height: 1.55; }
+.path .go { margin-top: 14px; font-weight: 600; font-size: 14px; color: var(--accent-text); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 980px) {
+  .profile { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .photo-col { order: -1; justify-self: start; }
+  .photo-wrap { max-width: 240px; }
+  .now { left: auto; right: -40px; bottom: 20px; }
+  .toolbox { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .flow { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .stage:not(:last-child)::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -18px; transform: translateX(-50%); }
+  .paths { grid-template-columns: minmax(0, 1fr); }
+  .lab { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .lp { padding: 0 16px; }
+  .lp section { padding: 40px 0; }
+  .tracks, .skills, .lab { grid-template-columns: minmax(0, 1fr); }
+  .photo-wrap { max-width: 200px; }
+  .now { right: -24px; padding: 8px 12px; font-size: 12.5px; }
+}
+
+/* ---------- arriving on the home page: a small flip ----------
+   The transition pseudo-elements are styled by the NEW page, so this only runs when the home page is the destination. */
+::view-transition-old(root) { animation: flip-out .28s cubic-bezier(.4, 0, 1, 1) both; transform-origin: 50% 50%; }
+::view-transition-new(root) { animation: flip-in .42s cubic-bezier(0, 0, .2, 1) .12s both; transform-origin: 50% 50%; }
+@keyframes flip-out { to   { opacity: 0; transform: perspective(1600px) rotateY(-12deg) scale(.96); } }
+@keyframes flip-in  { from { opacity: 0; transform: perspective(1600px) rotateY(12deg)  scale(.96); } }
+@media (prefers-reduced-motion: reduce) { ::view-transition-old(root), ::view-transition-new(root) { animation: none; } }

@@ -1,0 +1,63 @@
+/// One row per sales territory. Sales relates to it, so the row-level security role filters this table.
+table 'Sales Territory'
+	lineageTag: f0835c37-19db-460e-af75-9d6667580a68
+
+	column SalesTerritoryKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 21ae37b4-39e0-4c96-882d-3459eff9d6e3
+		summarizeBy: none
+		sourceColumn: SalesTerritoryKey
+
+	column Region
+		dataType: string
+		lineageTag: 1bb53b3d-a1aa-47e4-9bc0-abd49865bf53
+		summarizeBy: none
+		sourceColumn: Region
+
+	column Country
+		dataType: string
+		lineageTag: 80a2e8c0-9099-4bf0-b381-fbfc481d1bec
+		summarizeBy: none
+		sourceColumn: Country
+
+	/// North America, Europe, Pacific, or Corporate for the sales managers' own quotas.
+	column Group
+		dataType: string
+		lineageTag: 82cc9595-1dc1-46ec-a322-c7a201948042
+		summarizeBy: none
+		sourceColumn: Group
+
+	hierarchy 'Territory Hierarchy'
+		lineageTag: 6d73e383-99e7-4c1a-8597-fb2466bc7e26
+
+		level Group
+			lineageTag: 03cc6574-3965-4e0d-b965-ad3b0239f332
+			column: Group
+
+		level Country
+			lineageTag: 4bcd85be-581a-4096-a3a5-a6c6f7320bb3
+			column: Country
+
+		level Region
+			lineageTag: e71ce33a-b510-45fb-b78a-6749376ced91
+			column: Region
+
+	partition 'Sales Territory' = m
+		mode: import
+		source =
+				let
+				    Source      = Sql.Database(ServerName, DatabaseName),
+				    Territories = Value.NativeQuery(Source, "
+				SELECT SalesTerritoryKey,
+				       CASE WHEN SalesTerritoryRegion  = 'NA' THEN 'Corporate' ELSE SalesTerritoryRegion  END AS Region,
+				       CASE WHEN SalesTerritoryCountry = 'NA' THEN 'Corporate' ELSE SalesTerritoryCountry END AS Country,
+				       CASE WHEN SalesTerritoryGroup   = 'NA' THEN 'Corporate' ELSE SalesTerritoryGroup   END AS [Group]
+				FROM dbo.DimSalesTerritory
+				")
+				in
+				    Territories
+
+	annotation PBI_ResultType = Table
+

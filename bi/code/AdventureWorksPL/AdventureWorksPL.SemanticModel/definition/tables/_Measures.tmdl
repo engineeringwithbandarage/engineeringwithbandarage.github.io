@@ -1,0 +1,193 @@
+/// Home of every measure. Layer 1 (base) and helpers are hidden; P&L lines are numbered to match the finance report.
+table _Measures
+	lineageTag: 0ad27386-9618-4f44-8086-b820c5656d4d
+
+	/// Layer 1: one column, no logic.
+	measure '_Gross Sales Base' = SUM ( Sales[GrossSales] )
+		formatString: #,0
+		isHidden
+		displayFolder: zz Helpers
+		lineageTag: b8782f0f-58f1-413b-b4a6-6f185177d9e6
+
+	measure '_Discounts Base' = SUM ( Sales[Discounts] )
+		formatString: #,0
+		isHidden
+		displayFolder: zz Helpers
+		lineageTag: 7a681d73-26e4-4241-ad5e-09784f4f8f56
+
+	measure '_Product Cost Base' = SUM ( Sales[ProductCost] )
+		formatString: #,0
+		isHidden
+		displayFolder: zz Helpers
+		lineageTag: 8ffcde52-e9fd-427d-83ce-9eb5a5b5ed1d
+
+	measure _Units = SUM ( Sales[Units] )
+		formatString: #,0
+		isHidden
+		displayFolder: zz Helpers
+		lineageTag: a50899cf-922a-4ab4-b578-7a5dc8d1cdf2
+
+	/// True when exactly one currency other than USD is selected.
+	measure '_Show Local Currency' =
+			HASONEVALUE ( 'Currency'[CurrencyKey] )
+			    && NOT SELECTEDVALUE ( 'Currency'[IsReportingCurrency] )
+		isHidden
+		displayFolder: zz Helpers
+		lineageTag: 492217ce-74f9-41f0-947c-da3cc44a0a6d
+
+	measure '_Local Gross Sales' =
+			IF (
+			    [_Show Local Currency],
+			    SUMX ( Sales, Sales[GrossSales] * Sales[LocalCurrencyRate] ),   -- rate differs per row
+			    [_Gross Sales Base]                                              -- plain SUM, fast
+			)
+		formatString: #,0
+		isHidden
+		displayFolder: zz Helpers
+		lineageTag: f73fc97d-c2dc-44f2-a1f7-1fb971617a8b
+
+	measure '_Local Discounts' =
+			IF (
+			    [_Show Local Currency],
+			    SUMX ( Sales, Sales[Discounts] * Sales[LocalCurrencyRate] ),
+			    [_Discounts Base]
+			)
+		formatString: #,0
+		isHidden
+		displayFolder: zz Helpers
+		lineageTag: f515e9df-5850-4be4-b51b-f55f0c8db47e
+
+	measure '_Local Product Cost' =
+			IF (
+			    [_Show Local Currency],
+			    SUMX ( Sales, Sales[ProductCost] * Sales[LocalCurrencyRate] ),
+			    [_Product Cost Base]
+			)
+		formatString: #,0
+		isHidden
+		displayFolder: zz Helpers
+		lineageTag: f808b1b4-fe9e-4e5e-ad78-e8f64746895e
+
+	/// The last-year pattern often found in older models, kept only so Chapter 9 can time it against 03 - Net Sales LY.
+	measure '_Net Sales LY (FILTER version)' =
+			CALCULATE (
+			    SUMX ( VALUES ( 'Date'[FiscalWeekID] ), [03 - Net Sales] ),
+			    FILTER (
+			        ALL ( 'Date' ),
+			        COUNTROWS (
+			            FILTER ( 'Date', 'Date'[FiscalWeekID] = EARLIER ( 'Date'[FiscalWeekID] ) + 100 )
+			        )
+			    )
+			)
+		formatString: #,0
+		isHidden
+		displayFolder: zz Helpers
+		lineageTag: 968d5903-05e7-4bd1-bf2a-ca2b036d30ff
+
+	/// Order value at list price after volume pricing, before discounts.
+	measure '01 - Gross Sales' = [_Local Gross Sales]
+		formatString: #,0
+		displayFolder: P&L Actual
+		lineageTag: d10a7f77-93d5-4cac-97b6-424f45a26078
+
+	/// Promotional and volume discounts.
+	measure '02 - Discounts' = [_Local Discounts]
+		formatString: #,0
+		displayFolder: P&L Actual
+		lineageTag: b8cdcdd4-0fa7-4293-a741-323ce186aee4
+
+	/// Gross sales less discounts, in USD unless one other currency is selected.
+	measure '03 - Net Sales' = [01 - Gross Sales] - [02 - Discounts]
+		formatString: #,0
+		displayFolder: P&L Actual
+		lineageTag: 718e7511-c9db-419d-ae12-03c4c08c710a
+
+	/// Standard cost of the products sold.
+	measure '04 - Product Cost' = [_Local Product Cost]
+		formatString: #,0
+		displayFolder: P&L Actual
+		lineageTag: e617b086-b90d-4397-9083-96fc0d948e43
+
+	/// Net sales less product cost.
+	measure '05 - Gross Profit' = [03 - Net Sales] - [04 - Product Cost]
+		formatString: #,0
+		displayFolder: P&L Actual
+		lineageTag: c172d42a-ddfc-487e-9681-2aab0a5dbc81
+
+	/// Net sales for the same fiscal weeks last year (see Date[LYFiscalWeekID]).
+	measure '03 - Net Sales LY' =
+			VAR lyWeeks =
+			    VALUES ( 'Date'[LYFiscalWeekID] )      -- weeks to compare with, for the weeks on screen
+			RETURN
+			    CALCULATE (
+			        [03 - Net Sales],
+			        REMOVEFILTERS ( 'Date' ),
+			        TREATAS ( lyWeeks, 'Date'[FiscalWeekID] )
+			    )
+		formatString: #,0
+		displayFolder: P&L Last Year
+		lineageTag: a2e8ac0f-71a1-4999-ab19-1e2640092ed5
+
+	measure '05 - Gross Profit LY' =
+			CALCULATE (
+			    [05 - Gross Profit],
+			    REMOVEFILTERS ( 'Date' ),
+			    TREATAS ( VALUES ( 'Date'[LYFiscalWeekID] ), 'Date'[FiscalWeekID] )
+			)
+		formatString: #,0
+		displayFolder: P&L Last Year
+		lineageTag: 742889ad-3a7f-49c8-adae-35aade4d6105
+
+	/// Net sales less last year's.
+	measure '03 - Net Sales vs LY' = [03 - Net Sales] - [03 - Net Sales LY]
+		formatString: #,0
+		displayFolder: Variance
+		lineageTag: c673d928-9cfd-4fdd-8165-a3d016829fae
+
+	measure '03 - Net Sales vs LY %' = DIVIDE ( [03 - Net Sales vs LY], [03 - Net Sales LY] )
+		formatString: 0.0%
+		displayFolder: Variance
+		lineageTag: 8f1b5734-39c6-4b48-b592-1e46f7916a25
+
+	measure 'Gross Margin %' = DIVIDE ( [05 - Gross Profit], [03 - Net Sales] )
+		formatString: 0.0%
+		displayFolder: Ratios
+		lineageTag: 8a9c424d-523a-42fd-8cdb-87506c360c37
+
+	measure 'Net Sales per Unit' = DIVIDE ( [03 - Net Sales], [_Units] )
+		formatString: #,0.00
+		displayFolder: Ratios
+		lineageTag: c854dd2c-ad64-439b-a1bf-1032e43287de
+
+	/// Net sales to date within the week, period, quarter or year picked in Period To Date.
+	measure '03 - Net Sales PTD' =
+			VAR pick    = SELECTEDVALUE ( 'Period To Date'[Period], "Week" )
+			VAR lastDay = MAX ( 'Date'[Date] )               -- the end of whatever is selected
+			VAR wk      = MAX ( 'Date'[FiscalWeekID] )
+			VAR per     = MAX ( 'Date'[FiscalPeriodID] )
+			VAR qtr     = MAX ( 'Date'[FiscalQuarterID] )
+			VAR yr      = MAX ( 'Date'[FiscalYear] )
+			RETURN
+			    SWITCH (
+			        pick,
+			        "Week",    CALCULATE ( [03 - Net Sales], REMOVEFILTERS ( 'Date' ), 'Date'[FiscalWeekID] = wk ),
+			        "Period",  CALCULATE ( [03 - Net Sales], REMOVEFILTERS ( 'Date' ), 'Date'[FiscalPeriodID] = per, 'Date'[Date] <= lastDay ),
+			        "Quarter", CALCULATE ( [03 - Net Sales], REMOVEFILTERS ( 'Date' ), 'Date'[FiscalQuarterID] = qtr, 'Date'[Date] <= lastDay ),
+			        "Year",    CALCULATE ( [03 - Net Sales], REMOVEFILTERS ( 'Date' ), 'Date'[FiscalYear] = yr, 'Date'[Date] <= lastDay )
+			    )
+		formatString: #,0
+		displayFolder: Period To Date
+		lineageTag: 09748f68-f9c6-4cb8-8d6c-3701fd71a3ee
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: 752abcf3-b767-42e0-85cd-9e6c3bd5e189
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Placeholder]
+
+	partition _Measures = calculated
+		mode: import
+		source = ROW ( "Placeholder", BLANK () )
+

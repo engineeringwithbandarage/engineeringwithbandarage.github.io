@@ -1,0 +1,12 @@
+// P&L lines 01-05 by fiscal period x sales territory, in USD (no currency selected).
+EVALUATE
+SUMMARIZECOLUMNS (
+    'Date'[FiscalPeriodID],
+    'Sales Territory'[SalesTerritoryKey],
+    "GrossSales",  [01 - Gross Sales],
+    "Discounts",   [02 - Discounts],
+    "NetSales",    [03 - Net Sales],
+    "ProductCost", [04 - Product Cost],
+    "GrossProfit", [05 - Gross Profit]
+)
+ORDER BY 'Date'[FiscalPeriodID], 'Sales Territory'[SalesTerritoryKey]

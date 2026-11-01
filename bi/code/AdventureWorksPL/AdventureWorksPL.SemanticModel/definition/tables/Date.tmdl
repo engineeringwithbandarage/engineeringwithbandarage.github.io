@@ -1,0 +1,173 @@
+/// One row per day, FY2011 to FY2014: the 4-4-5 fiscal labels users slice by, and the hidden fiscal IDs used by time intelligence.
+table Date
+	lineageTag: 10a54655-600f-45a0-959a-e2a53f13e0cf
+	dataCategory: Time
+
+	column DateKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 761ab418-ec69-47d6-9dd7-3f4e07ac0c87
+		summarizeBy: none
+		sourceColumn: DateKey
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: 48c54c70-60e0-440c-8063-6e8357e4c06d
+		summarizeBy: none
+		sourceColumn: Date
+
+	column 'Day Name'
+		dataType: string
+		lineageTag: 6bf2b3f6-e964-40f9-ad74-110271b6d7a4
+		summarizeBy: none
+		sourceColumn: Day Name
+
+	/// Fiscal week label, sorted by FiscalWeekID.
+	column 'Fiscal Week'
+		dataType: string
+		lineageTag: aba40e08-af59-4927-826c-a5c99fccb6ee
+		summarizeBy: none
+		sourceColumn: Fiscal Week
+		sortByColumn: FiscalWeekID
+
+	column FiscalYear
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 0ebd7d24-8cea-41fb-ba70-7809d9910119
+		summarizeBy: none
+		sourceColumn: FiscalYear
+
+	column FiscalQuarterID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 4e10bfc8-6e4e-41f6-a1ba-4c223555237d
+		summarizeBy: none
+		sourceColumn: FiscalQuarterID
+
+	column FiscalPeriodID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7199ef68-9f27-48a4-b225-005386711a13
+		summarizeBy: none
+		sourceColumn: FiscalPeriodID
+
+	/// Year x 100 + week: the key for last-year logic.
+	column FiscalWeekID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e1ce2671-c4b7-41f9-9735-d96f6be05254
+		summarizeBy: none
+		sourceColumn: FiscalWeekID
+
+	/// The week this week is compared with last year. Blank for week 53, which has no partner.
+	column LYFiscalWeekID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 52ee9f08-7a3a-4b3b-ba5b-01f152005eb2
+		summarizeBy: none
+		sourceColumn: LYFiscalWeekID
+
+	/// Fiscal year label, such as FY2013.
+	column 'Fiscal Year'
+		dataType: string
+		lineageTag: 55ab18b8-aac6-40c8-9fe9-0fc2fb2324cd
+		summarizeBy: none
+		sourceColumn: Fiscal Year
+		sortByColumn: FiscalYear
+
+	column FiscalQuarter
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 66b0cd51-2653-4e0c-8a39-9fd2b1c18e8d
+		summarizeBy: none
+		sourceColumn: FiscalQuarter
+
+	/// Fiscal quarter within the year, Q1 to Q4.
+	column Quarter
+		dataType: string
+		lineageTag: dfff4ba3-3441-4a9b-8571-f8fccdfef4b0
+		summarizeBy: none
+		sourceColumn: Quarter
+		sortByColumn: FiscalQuarter
+
+	column FiscalPeriod
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 104420e1-62cb-4421-870c-389ac549acf9
+		summarizeBy: none
+		sourceColumn: FiscalPeriod
+
+	/// 4-4-5 period within the year, such as P01 Jul.
+	column Period
+		dataType: string
+		lineageTag: f517f357-c891-4c7c-9d1b-d8d20dd0d8e8
+		summarizeBy: none
+		sourceColumn: Period
+		sortByColumn: FiscalPeriod
+
+	/// Period label that is unique across years, such as FY2013 P01, for trend charts.
+	column 'Year Period'
+		dataType: string
+		lineageTag: 7e5f8f1a-a6da-4322-9cc3-d57c1648640c
+		summarizeBy: none
+		sourceColumn: Year Period
+		sortByColumn: FiscalPeriodID
+
+	hierarchy 'Fiscal Calendar'
+		lineageTag: 1fde007c-03aa-4ab2-a5a8-eca4634a6dac
+
+		level 'Fiscal Year'
+			lineageTag: 0963e270-b513-4ea7-872b-a6f501892f3b
+			column: 'Fiscal Year'
+
+		level Quarter
+			lineageTag: 0a743405-b87d-43fa-ab1f-a1b9bac1b5b4
+			column: Quarter
+
+		level Period
+			lineageTag: fc09528c-67a9-4c51-b0b6-0937a3c5952e
+			column: Period
+
+		level 'Fiscal Week'
+			lineageTag: fd935313-1f2b-4df8-92ef-501d02f38663
+			column: 'Fiscal Week'
+
+	partition Date = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(ServerName, DatabaseName),
+				    Dates  = Value.NativeQuery(Source, FiscalCalendarSql & "
+				SELECT DateKey,
+				       [Date],
+				       DayName AS [Day Name],
+				       CONCAT('W', RIGHT('0' + CAST(FiscalWeek AS varchar(2)), 2)) AS [Fiscal Week],
+				       FiscalYear,
+				       CONCAT('FY', FiscalYear) AS [Fiscal Year],
+				       FiscalQuarter,
+				       CONCAT('Q', FiscalQuarter) AS [Quarter],
+				       FiscalPeriod,
+				       CONCAT('P', RIGHT('0' + CAST(FiscalPeriod AS varchar(2)), 2), ' ', CHOOSE(FiscalPeriod, 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun')) AS [Period],
+				       CONCAT('FY', FiscalYear, ' P', RIGHT('0' + CAST(FiscalPeriod AS varchar(2)), 2)) AS [Year Period],
+				       FiscalYear * 10  + FiscalQuarter AS FiscalQuarterID,
+				       FiscalYear * 100 + FiscalPeriod  AS FiscalPeriodID,
+				       FiscalYear * 100 + FiscalWeek    AS FiscalWeekID,
+				       CASE WHEN FiscalWeek = 53 THEN NULL               -- finance rule: week 53 has no last-year week
+				            ELSE (FiscalYear - 1) * 100 + FiscalWeek END AS LYFiscalWeekID
+				FROM cal
+				")
+				in
+				    Dates
+
+	annotation PBI_ResultType = Table
+

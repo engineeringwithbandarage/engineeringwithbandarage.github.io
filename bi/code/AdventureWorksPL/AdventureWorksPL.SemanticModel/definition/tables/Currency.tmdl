@@ -1,0 +1,53 @@
+/// The currency each order was placed in. Selecting one non-reporting currency shows amounts converted to it.
+table Currency
+	lineageTag: d3169966-e8c9-49d2-a7a4-335975e7d136
+
+	column CurrencyKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 6192637e-6e5f-4806-a128-7b70f2c666a3
+		summarizeBy: none
+		sourceColumn: CurrencyKey
+
+	column 'Currency Code'
+		dataType: string
+		lineageTag: 7810965b-fd5b-4092-b59c-87292ea1a83a
+		summarizeBy: none
+		sourceColumn: Currency Code
+
+	column Currency
+		dataType: string
+		lineageTag: 12ec6b2a-e979-4a9a-8b65-3c46ed83867b
+		summarizeBy: none
+		sourceColumn: Currency
+
+	/// True for USD, the currency every amount is stored in.
+	column IsReportingCurrency
+		dataType: boolean
+		isHidden
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 1660bd04-1d52-4cf4-86d1-6b9184e29f72
+		summarizeBy: none
+		sourceColumn: IsReportingCurrency
+
+	partition Currency = m
+		mode: import
+		source =
+				let
+				    Source     = Sql.Database(ServerName, DatabaseName),
+				    Currencies = Value.NativeQuery(Source, "
+				SELECT CurrencyKey,
+				       CurrencyAlternateKey AS [Currency Code],
+				       CurrencyName AS Currency,
+				       CAST(CASE WHEN CurrencyAlternateKey = 'USD' THEN 1 ELSE 0 END AS bit) AS IsReportingCurrency
+				FROM dbo.DimCurrency
+				WHERE CurrencyKey IN (SELECT CurrencyKey FROM dbo.FactInternetSales
+				                      UNION
+				                      SELECT CurrencyKey FROM dbo.FactResellerSales)
+				")
+				in
+				    Currencies
+
+	annotation PBI_ResultType = Table
+

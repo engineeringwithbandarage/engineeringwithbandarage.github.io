@@ -1,0 +1,33 @@
+/// Internet or Reseller.
+table Channel
+	lineageTag: 53e177e9-9ce6-4900-b841-e81d63629540
+
+	column ChannelKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 532cf1ab-7512-48fc-98bb-92c7bc404e12
+		summarizeBy: none
+		sourceColumn: ChannelKey
+
+	column Channel
+		dataType: string
+		lineageTag: 0aba43c4-3495-4c88-b7ba-9d68c7e7d8a7
+		summarizeBy: none
+		sourceColumn: Channel
+
+	partition Channel = m
+		mode: import
+		source =
+				let
+				    Source   = Sql.Database(ServerName, DatabaseName),
+				    Channels = Value.NativeQuery(Source, "
+				SELECT 1 AS ChannelKey, 'Internet' AS Channel
+				UNION ALL
+				SELECT 2, 'Reseller'
+				")
+				in
+				    Channels
+
+	annotation PBI_ResultType = Table
+
